@@ -7,7 +7,7 @@ namespace MaxGenesis
 {
     public class ApiConnector
     {
-        private static readonly HttpClient _client = new HttpClient();
+        private static readonly HttpClient _client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
         private readonly string _apiUrl;
 
         public ApiConnector(string apiUrl)
@@ -17,25 +17,39 @@ namespace MaxGenesis
 
         public async Task<string> Generate3DFromImage(string imagePath)
         {
-            if (!File.Exists(imagePath)) throw new FileNotFoundException("Imagen no encontrada.");
+            if (!File.Exists(imagePath)) throw new FileNotFoundException("Imagen no encontrada localmente.");
 
-            using (var content = new MultipartFormDataContent())
+            try
             {
-                var fileStream = File.OpenRead(imagePath);
-                var streamContent = new StreamContent(fileStream);
-                content.Add(streamContent, "file", Path.GetFileName(imagePath));
-
-                var response = await _client.PostAsync(_apiUrl, content);
-                response.EnsureSuccessStatusCode();
-
-                // Suponemos que el API devuelve el archivo OBJ directamente o una URL
-                // Por simplicidad, guardaremos el resultado en un archivo temporal
-                string tempObjPath = Path.Combine(Path.GetTempPath(), "MaxGenesis_Result.obj");
-                using (var file = File.Create(tempObjPath))
+                using (var content = new MultipartFormDataContent())
                 {
-                    await response.Content.CopyToAsync(file);
+                    var fileBytes = File.ReadAllBytes(imagePath);
+                    var fileContent = new ByteArrayContent(fileBytes);
+                    content.Add(fileContent, "file", Path.GetFileName(imagePath));
+
+                    var response = await _client.PostAsync(_apiUrl, content);
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string errorDetail = await response.Content.ReadAsStringAsync();
+                        throw new Exception($"El servidor de IA respondió con error ({response.StatusCode}): {errorDetail}");
+                    }
+
+                    string tempObjPath = Path.Combine(Path.GetTempPath(), "MaxGenesis_Result.obj");
+                    using (var file = File.Create(tempObjPath))
+                    {
+                        await response.Content.CopyToAsync(file);
+                    }
+                    return tempObjPath;
                 }
-                return tempObjPath;
+            }
+            catch (TaskCanceledException)
+            {
+                throw new Exception("La IA está tardando demasiado. Verifica tu servidor de Python.");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception("No se pudo conectar con el servidor de IA. ¿Está encendido el script de Python?");
             }
         }
     }
