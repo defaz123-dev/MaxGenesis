@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "mfTqyws3720=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Camila\\RiderProjects\\MaxForest\\MaxGenesis\\MaxGenesis.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Camila\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.3\\microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "C:\\Users\\Camila\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net48\\1.0.3\\microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg.sha512",
+    "C:\\Users\\Camila\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
